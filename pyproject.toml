@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=64", "wheel", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools_scm]
+version_file = "collector/__init__.py"
+
+[project]
+name = "money-collector"
+description="Money collector - use it to collect a lot of money from you clients :-)."
+dynamic = ["version"]
+authors = [
+    {name = "Michal Mládek"},
+    {email = "michal.mladek.78@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+keywords = ["cli", "tool", "internet"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "python-dotenv",
+    "asyncio",
+    "httpx",
+    "inquirerpy"
+]
+
+[project.license]
+file = "LICENSE"
+
+[project.optional-dependencies]
+dev = [
+    "rich",
+    "ipython",
+    "notebook",
+    "build",
+    "validate-pyproject",
+    "pre-commit",
+    "black",
+    "autoflake",
+    "flake8",
+    "mypy",
+    "isort",
+]
+
+[project.urls]
+homepage = "https://github.com/michalnik/moeny-collector"
+repository = "https://github.com/michalnik/money-collector"
