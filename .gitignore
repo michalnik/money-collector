@@ -1,0 +1,13 @@
+# jupyter notebook
+.ipynb_checkpoints
+# Pycharm IDE files
+.idea
+# virtual environment files
+.venv
+# environment variables
+.env
+# python build system
+.eggs
+*.egg-info
+dist
+build
