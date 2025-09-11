@@ -254,17 +254,18 @@ async def mark_invoice_as_sent(invoice_id: int):
 
 async def get_unsent_invoices(subject_id: int) -> list[dict]:
     invoices_unsent = await fakturoid.request(
-        "get", "invoices", query_params={"subject_id": subject_id, "status": ["open"]}
+        "get", "invoices", query_params={"subject_id": subject_id, "status": "open"}
     )
     assert isinstance(invoices_unsent, list)
     return invoices_unsent
 
 
 async def get_unpaid_invoices(subject_id: int) -> list[dict]:
-    invoices_unpaid = await fakturoid.request(
-        "get", "invoices", query_params={"subject_id": subject_id, "status": ["open", "sent", "overdue"]}
-    )
-    assert isinstance(invoices_unpaid, list)
+    invoices_unpaid: list[dict] = []
+    for status in ["open", "sent", "overdue"]:
+        invoices = await fakturoid.request("get", "invoices", query_params={"subject_id": subject_id, "status": status})
+        assert isinstance(invoices, list)
+        invoices_unpaid += invoices
     return invoices_unpaid
 
 
