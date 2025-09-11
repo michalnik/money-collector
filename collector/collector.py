@@ -16,6 +16,10 @@ from InquirerPy.validator import EmptyInputValidator
 from prompt_toolkit.validation import ValidationError, Validator
 
 
+class NoClientsFound(Exception):
+    pass
+
+
 @dataclass
 class Client:
     ID: str = ""
@@ -135,6 +139,8 @@ async def get_subjects() -> list[dict]:
 async def select_client() -> dict[str, typing.Any]:
     _clients: list[dict] = await get_subjects()
     choices = [f"{c['id']} - {c['name']}" for c in _clients]
+    if not choices:
+        raise NoClientsFound()
     fuzzy = inquirer.fuzzy(
         message="Choose your client for invoicing:",
         choices=choices,
@@ -246,8 +252,18 @@ async def mark_invoice_as_sent(invoice_id: int):
     await fakturoid.request("POST", "invoice_actions", url_params=(invoice_id,), data={"event": "mark_as_sent"})
 
 
-async def get_unpaid_invoices() -> list[dict]:
-    invoices_unpaid = await fakturoid.request("get", "invoices", query_params={"status": ["open", "sent", "overdue"]})
+async def get_unsent_invoices(subject_id: int) -> list[dict]:
+    invoices_unsent = await fakturoid.request(
+        "get", "invoices", query_params={"subject_id": subject_id, "status": ["open"]}
+    )
+    assert isinstance(invoices_unsent, list)
+    return invoices_unsent
+
+
+async def get_unpaid_invoices(subject_id: int) -> list[dict]:
+    invoices_unpaid = await fakturoid.request(
+        "get", "invoices", query_params={"subject_id": subject_id, "status": ["open", "sent", "overdue"]}
+    )
     assert isinstance(invoices_unpaid, list)
     return invoices_unpaid
 
@@ -396,9 +412,13 @@ def configuration_read():
 
 
 async def main():  # noqa[C901] McCabe:6
+    try:
+        selected_client: dict = await select_client()
+    except NoClientsFound:
+        print("You have no clients to invoice.")
+        return
     answer_bool = inquirer.confirm(message="Create invoice?", default=True)
     if typing.cast(bool, await answer_bool.execute_async()):
-        selected_client: dict = await select_client()
         invoice_issued_date: date = await get_date(date_type_text="an invoice issued")
 
         answer_number = inquirer.number(
@@ -418,34 +438,55 @@ async def main():  # noqa[C901] McCabe:6
             print(f"Item description: {items[-1]['name']}")
             print(f"Total item price is: {items[-1]['total_price']} Kč")
 
-        answer_bool = inquirer.confirm(message="Issue and send invoice?", default=True)
+        answer_bool = inquirer.confirm(message="Issue invoice?", default=True)
         if typing.cast(bool, await answer_bool.execute_async()):
-            invoice: dict = await issue_invoice(selected_client, invoice_issued_date, due, items)
-            invoice_pdf: bytes = await download_pdf(invoice["id"])
-            user: dict = await get_user()
-            send_email_with_invoice(
-                invoice_pdf,
-                selected_client["email"],
-                email_smtp.SUBJECT % (invoice["number"],),
-                email_smtp.SMTP_USER,
-                email_smtp.BODY % (user["full_name"],),
+            await issue_invoice(selected_client, invoice_issued_date, due, items)
+    answer_bool = inquirer.confirm(message="Sent issued invoices?", default=False)
+    if typing.cast(bool, await answer_bool.execute_async()):
+        invoices_unsent = await get_unsent_invoices(selected_client["id"])
+        if not invoices_unsent:
+            print("No invoices to sent.")
+        else:
+            answer_select = inquirer.select(
+                multiselect=True,
+                message="Select invoices to sent:",
+                choices=[Choice(name=invoice["number"], value=invoice["id"]) for invoice in invoices_unsent],
             )
-            await mark_invoice_as_sent(invoice["id"])
+            selected_choices = typing.cast(list, await answer_select.execute_async())
+
+            selected_invoices = [invoice for invoice in invoices_unsent if invoice["id"] in selected_choices]
+            for invoice in selected_invoices:
+                invoice_pdf: bytes = await download_pdf(invoice["id"])
+                user: dict = await get_user()
+                send_email_with_invoice(
+                    invoice_pdf,
+                    selected_client["email"],
+                    email_smtp.SUBJECT % (invoice["number"],),
+                    email_smtp.SMTP_USER,
+                    email_smtp.BODY % (user["full_name"],),
+                )
+                await mark_invoice_as_sent(invoice["id"])
+
     answer_bool = inquirer.confirm(message="Pay unpaid invoices?", default=True)
     if typing.cast(bool, await answer_bool.execute_async()):
-        invoices_unpaid = await get_unpaid_invoices()
-        answer_select = inquirer.select(
-            multiselect=True,
-            message="Select invoices to paid:",
-            choices=[Choice(name=invoice["number"], value=invoice["id"]) for invoice in invoices_unpaid],
-        )
-        selected_choices = typing.cast(list, await answer_select.execute_async())
+        invoices_unpaid = await get_unpaid_invoices(selected_client["id"])
+        if not invoices_unpaid:
+            print("No invoices to pay.")
+        else:
+            answer_select = inquirer.select(
+                multiselect=True,
+                message="Select invoices to pay:",
+                choices=[Choice(name=invoice["number"], value=invoice["id"]) for invoice in invoices_unpaid],
+            )
+            selected_choices = typing.cast(list, await answer_select.execute_async())
 
-        selected_invoices = [invoice for invoice in invoices_unpaid if invoice["id"] in selected_choices]
-        for invoice in selected_invoices:
-            invoice["paid_at"] = await get_date(date_type_text=f'Enter date of invoice {invoice["number"]} was paid')
-            await paid_invoice(invoice["id"], invoice["paid_at"])
-            print(f"Invoice {invoice['number']} was paid at {invoice['paid_at']}!")
+            selected_invoices = [invoice for invoice in invoices_unpaid if invoice["id"] in selected_choices]
+            for invoice in selected_invoices:
+                invoice["paid_at"] = await get_date(
+                    date_type_text=f'Enter date of invoice {invoice["number"]} was paid'
+                )
+                await paid_invoice(invoice["id"], invoice["paid_at"])
+                print(f"Invoice {invoice['number']} was paid at {invoice['paid_at']}!")
 
 
 if __name__ == "__main__":
