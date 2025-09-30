@@ -1,4 +1,3 @@
-import asyncio
 import re
 import smtplib
 import tomllib
@@ -486,14 +485,3 @@ async def main():  # noqa[C901] McCabe:6
                 invoice["paid_at"] = await get_date(date_type_text=f'an invoice {invoice["number"]} paid')
                 await paid_invoice(invoice["id"], invoice["paid_at"])
                 print(f"Invoice {invoice['number']} was paid at {invoice['paid_at']}!")
-
-
-if __name__ == "__main__":
-    if not configuration_exists():
-        configuration_setup()
-
-    config = configuration_read()
-    fakturoid.set_from_config(config["fakturoid"])
-    email_smtp.set_from_config(config["email"])
-
-    asyncio.run(main())

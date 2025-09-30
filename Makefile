@@ -21,8 +21,8 @@ help:
 
 .python-version:
 	pyenv install -s 3.13
-	pyenv virtualenv -s 3.13 moje-3.13
-	pyenv local moje-3.13
+	pyenv virtualenv 3.13 money-collector-3.13
+	pyenv local money-collector-3.13
 
 venv: .python-version
 
@@ -32,10 +32,10 @@ install: venv
 	@echo "Project installed in editable mode with dev dependencies"
 
 mypy:
-	(cd collector && $(PYTHON) -m mypy .)
+	$(PYTHON) -m mypy collector
 
 isort:
-	(cd collector && $(PYTHON) -m isort .)
+	$(PYTHON) -m isort collector
 
 lint: mypy isort
 
@@ -45,4 +45,4 @@ clean:
 	@echo "Cleaned __pycache__ and .mypy_cache"
 
 run: venv
-	(cd collector && $(PYTHON) -m collector)
+	$(PYTHON) -m collector

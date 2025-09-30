@@ -1,1 +1,2 @@
-exclude softorks/mypy.ini
+exclude mypy.ini
+recursive-exclude * collector/.mypy_cache

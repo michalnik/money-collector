@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["collector"]
 
 [tool.setuptools_scm]
 version_file = "collector/__init__.py"
@@ -29,6 +30,8 @@ dependencies = [
     "httpx",
     "inquirerpy"
 ]
+[project.scripts]
+collector = "collector.__main__:main_entry"
 
 [project.license]
 file = "LICENSE"
@@ -49,5 +52,5 @@ dev = [
 ]
 
 [project.urls]
-homepage = "https://github.com/michalnik/moeny-collector"
+homepage = "https://github.com/michalnik/money-collector"
 repository = "https://github.com/michalnik/money-collector"
