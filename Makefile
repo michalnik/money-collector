@@ -42,6 +42,8 @@ lint: mypy isort
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	rm -rf .mypy_cache
+	rm -rf money-collector.egg-info
+
 	@echo "Cleaned __pycache__ and .mypy_cache"
 
 run: venv

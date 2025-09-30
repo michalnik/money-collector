@@ -17,7 +17,7 @@ pyenv install -s 3.13
 pyenv virtualenv 3.13 money-collector-3.13
 pyenv activate money-collector-3.13
 
-pip install git+https://github.com/michalnik/money-collector.git@v1.0.0
+pip install git+https://github.com/michalnik/money-collector.git@v1.0.1
 ```
 
 # run
