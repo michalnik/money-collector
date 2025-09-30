@@ -41,7 +41,7 @@ class Client:
 
         self.ends = {
             "token": "/oauth/token",
-            "user": "/api/v3/user.json",
+            "user": "/user.json",
             "subjects": f"/accounts/{self.ACCOUNT}/subjects.json",
             "invoices": f"/accounts/{self.ACCOUNT}/invoices.json",
             "invoice_actions": f"/accounts/{self.ACCOUNT}/invoices/%d/fire.json",
@@ -483,9 +483,7 @@ async def main():  # noqa[C901] McCabe:6
 
             selected_invoices = [invoice for invoice in invoices_unpaid if invoice["id"] in selected_choices]
             for invoice in selected_invoices:
-                invoice["paid_at"] = await get_date(
-                    date_type_text=f'Enter date of invoice {invoice["number"]} was paid'
-                )
+                invoice["paid_at"] = await get_date(date_type_text=f'an invoice {invoice["number"]} paid')
                 await paid_invoice(invoice["id"], invoice["paid_at"])
                 print(f"Invoice {invoice['number']} was paid at {invoice['paid_at']}!")
 
