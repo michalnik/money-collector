@@ -461,8 +461,8 @@ async def main():  # noqa[C901] McCabe:6
                 send_email_with_invoice(
                     invoice_pdf,
                     selected_client["email"],
-                    email_smtp.SUBJECT % (invoice["number"],),
                     email_smtp.SMTP_USER,
+                    email_smtp.SUBJECT % (invoice["number"],),
                     email_smtp.BODY % (user["full_name"],),
                 )
                 await mark_invoice_as_sent(invoice["id"])
