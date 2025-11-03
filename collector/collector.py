@@ -109,7 +109,7 @@ class Email:
     SMTP_PORT: int = -1
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    SUBJECT: str = "Faktura č. MM%s"
+    SUBJECT: str = "Faktura č. %s"
     BODY: str = "Hezký den,\n\nVystavil jsem pro Vás fakturu.\n\nDíky!\n\n%s"
 
     def set_from_config(self, configuration: dict[str, typing.Any]):
